@@ -1,3 +1,4 @@
+
 name: Check PR Source Branch
 
 on:
@@ -5,6 +6,7 @@ on:
     types: [opened, synchronize, reopened, edited]
     branches:
       - main
+      - develop
 
 permissions:
   contents: read
@@ -15,13 +17,27 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Verify source is develop
+      - name: Verify source branch
         env:
           SOURCE_BRANCH: ${{ github.head_ref }}
+          TARGET_BRANCH: ${{ github.base_ref }}
         run: |
-          if [[ "$SOURCE_BRANCH" != "develop" ]]; then
-            echo "::error::Only develop can be merged into main."
-            exit 1
+          echo "Source: $SOURCE_BRANCH"
+          echo "Target: $TARGET_BRANCH"
+
+          if [[ "$TARGET_BRANCH" == "main" ]]; then
+            if [[ "$SOURCE_BRANCH" != "develop" ]]; then
+              echo "::error::Only develop can merge into main."
+              exit 1
+            fi
+
+          elif [[ "$TARGET_BRANCH" == "develop" ]]; then
+            if [[ "$SOURCE_BRANCH" != "backend" &&
+                  "$SOURCE_BRANCH" != "frontend" &&
+                  "$SOURCE_BRANCH" != "data" ]]; then
+              echo "::error::Only backend, frontend and data can merge into develop."
+              exit 1
+            fi
           fi
 
-          echo "Source branch is develop. OK."
+          echo "Branch source validation passed."
