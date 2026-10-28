@@ -15,7 +15,7 @@ export async function generateMetadata(): Promise<Metadata> {
     metadataBase: new URL(serverURL()),
     icons: { icon: mediaPath(mediaObject(site.logo)?.url) || '/icon.svg' },
     title: { default: `${site.name} — ${site.subtitle}`, template: `%s — ${site.name}` },
-    description: site.seo?.description || 'Douceurs et créations artisanales de pâtisserie algérienne.',
+    description: site.seo?.description || 'Douceurs et créations de pâtisserie artisanale.',
     robots: { index: process.env.SITE_INDEXABLE === 'true', follow: process.env.SITE_INDEXABLE === 'true' },
   }
 }

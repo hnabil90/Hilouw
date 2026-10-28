@@ -173,7 +173,7 @@ export interface Product {
   id: number;
   name: string;
   /**
-   * Exemple : bniouen-chocolat. Lettres minuscules, chiffres et tirets.
+   * Exemple : douceur-chocolat. Lettres minuscules, chiffres et tirets.
    */
   slug: string;
   summary?: string | null;
@@ -308,7 +308,7 @@ export interface Post {
   id: number;
   title: string;
   /**
-   * Exemple : bniouen-chocolat. Lettres minuscules, chiffres et tirets.
+   * Exemple : douceur-chocolat. Lettres minuscules, chiffres et tirets.
    */
   slug: string;
   excerpt?: string | null;

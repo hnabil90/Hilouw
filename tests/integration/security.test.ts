@@ -10,7 +10,9 @@ import sharp from 'sharp'
 import { sql } from '@payloadcms/db-postgres'
 import { consumeContactRate } from '../../src/lib/contact-rate'
 import { resetAdminPassword } from '../../scripts/reset-admin-password'
+import { up as neutralBrandCopy } from '../../src/migrations/20261028_233812_neutral_brand_copy'
 import config from '../../src/payload.config.js'
+import type { Product } from '../../src/payload-types'
 
 // Une base dédiée évite de créer ou supprimer des comptes dans une vraie base.
 const databaseName = new URL(process.env.DATABASE_URL ?? '').pathname
@@ -147,7 +149,7 @@ test('migrations, authentification et droits réels sur PostgreSQL', async (t) =
   const patch = (path: string, data: unknown, token: string) => request(`${base}${path}`, {
     method: 'PATCH', headers: { 'Content-Type': 'application/json', Authorization: `JWT ${token}` }, body: JSON.stringify(data),
   })
-  const richText = (text: string) => ({ root: { type: 'root', version: 1, direction: null, format: '', indent: 0,
+  const richText = (text: string): NonNullable<Product['description']> => ({ root: { type: 'root', version: 1, direction: null, format: '', indent: 0,
     children: [{ type: 'paragraph', version: 1, direction: null, format: '', indent: 0, textFormat: 0, textStyle: '',
       children: [{ type: 'text', version: 1, text, format: 0, detail: 0, mode: 'normal', style: '' }] }] } })
 
@@ -312,6 +314,30 @@ test('migrations, authentification et droits réels sur PostgreSQL', async (t) =
     } finally {
       await payload.db.drizzle.execute(sql`DELETE FROM payload_kv WHERE "key" IN (${`contact:${key}`}, 'contact:global')`)
     }
+  })
+
+  await t.test('la migration neutralise les textes et leurs versions sans changer les liens ou allergènes', async () => {
+    const product = await payload.create({ collection: 'products', draft: true, data: {
+      name: 'Bniouen au chocolat', slug: `bniouen-migration-${randomBytes(4).toString('hex')}`,
+      summary: 'Pâtisserie artisanale algérienne.', description: richText('La pâtisserie algérienne et le bniouen.'),
+      allergenInformation: 'Le bniouen contient des amandes.', cta: { label: 'Le bniouen', href: '/produits/bniouen-chocolat' },
+    } })
+    createdProducts.push(product.id)
+    await neutralBrandCopy({ db: payload.db.drizzle } as Parameters<typeof neutralBrandCopy>[0])
+    const updated = await payload.findByID({ collection: 'products', id: product.id })
+    assert.equal(updated.name, 'Douceur au chocolat')
+    assert.equal(updated.summary, 'Pâtisserie artisanale.')
+    assert.deepEqual(updated.description, richText('La pâtisserie artisanale et la douceur.'))
+    assert.equal(updated.allergenInformation, 'La douceur contient des amandes.')
+    assert.equal(updated.cta?.label, 'La douceur')
+    assert.equal(updated.cta?.href, product.cta?.href)
+    assert.equal(updated.slug, product.slug)
+    const versions = await payload.findVersions({ collection: 'products', where: { parent: { equals: product.id } } })
+    assert.ok(versions.docs.length > 0)
+    assert.ok(versions.docs.every((version) => version.version.name === updated.name))
+    // Un second passage ne doit ni changer les nouveaux textes ni créer de versions.
+    await neutralBrandCopy({ db: payload.db.drizzle } as Parameters<typeof neutralBrandCopy>[0])
+    assert.equal((await payload.findByID({ collection: 'products', id: product.id })).name, updated.name)
   })
 
   await t.test('la récupération SSH refuse une confirmation incorrecte et récupère un admin verrouillé', async () => {

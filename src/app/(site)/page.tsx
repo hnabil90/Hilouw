@@ -19,15 +19,15 @@ export default async function Home() {
   const single = selection.docs.length === 1 ? selection.docs[0] : undefined
   return <>
     <section className={`brand-hero ${heroImage ? 'hero-with-image' : 'hero-typographic'}`} aria-labelledby="hero-title">
-      <div className="container hero-inner"><div className="hero-copy"><p className="section-label">Pâtisserie artisanale algérienne</p>
-        <h1 id="hero-title">{home.hero?.title || site.tagline}</h1><p className="hero-description">{home.hero?.text || 'Un univers de douceurs, imaginé autour du bniouen.'}</p>
+      <div className="container hero-inner"><div className="hero-copy"><p className="section-label">Pâtisserie artisanale</p>
+        <h1 id="hero-title">{home.hero?.title || site.tagline}</h1><p className="hero-description">{home.hero?.text || 'Un univers de douceurs, imaginé pour vos moments de partage.'}</p>
         <CTA value={home.hero?.cta} fallback={{ label: 'Découvrir nos douceurs', href: '/produits' }} /><Link className="hero-secondary" href="/equipe">L’histoire de HILOUW</Link></div>
         {heroImage ? <figure className="hero-photo"><Photo value={heroImage} eager sizes="(max-width: 760px) 100vw, 65vw" />{heroImage.caption && <figcaption>{heroImage.caption}</figcaption>}</figure> :
           <div className="brand-composition" aria-hidden="true"><div className="brand-orbit" /><span className="brand-initial">h.</span><span className="brand-signature">Douceurs & Créations</span></div>}
       </div><div className="container hero-footnote"><span>{site.name}</span><span>Le goût des choses faites avec soin.</span></div>
     </section>
     <section className="section introduction container"><p className="section-label">La maison HILOUW</p>
-      {home.introduction ? <RichText value={home.introduction} className="intro-rich" /> : <h2>La pâtisserie algérienne,<br />une histoire de gourmandise.</h2>}
+      {home.introduction ? <RichText value={home.introduction} className="intro-rich" /> : <h2>La pâtisserie artisanale,<br />une histoire de gourmandise.</h2>}
       <Link className="text-link" href="/equipe">Rencontrer notre équipe <span aria-hidden="true">↗</span></Link></section>
     {home.showProducts !== false && selection.docs.length > 0 && <section className="section selection-section"><div className="container">
       <div className="section-heading"><div><p className="section-label">À découvrir</p><h2>{home.productsTitle || 'Nos douceurs du moment'}</h2></div><Link className="text-link" href="/produits">Tout le catalogue <span aria-hidden="true">↗</span></Link></div>

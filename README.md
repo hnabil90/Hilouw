@@ -169,6 +169,8 @@ Copier les sauvegardes chiffrées sur un autre support et tester leur restaurati
 
 Pour les mises à jour : sauvegarder, récupérer la version validée de `main`, reconstruire les images et exécuter les migrations avant de redémarrer l’application. Un retour à une ancienne image n’annule pas une migration de base.
 
+La migration `neutral_brand_copy` met à jour les anciennes mentions dans les textes éditoriaux du CMS, les descriptions SEO, les textes alternatifs et les versions enregistrées. Les liens, slugs et noms de fichiers restent stables. Le retour arrière du schéma ne restaure pas les anciens textes : conserver la sauvegarde avant migration.
+
 ## Git
 
 Développement sur `backend`, `data` ou `frontend`, PR vers `develop`, puis PR `develop → main`. Aucun push direct sur `main` ni `develop`. Les contrôles de provenance existants sont conservés.

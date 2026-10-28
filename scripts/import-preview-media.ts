@@ -12,7 +12,7 @@ async function main() {
   }
   const payload = await getPayload({ config })
   const assets = [
-    ['01_hero_sans_degrade.jpg', 'Bniouen au chocolat dans un coffret clair.'],
+    ['01_hero_sans_degrade.jpg', 'Douceur au chocolat dans un coffret clair.'],
     ['02_coffret_gourmand.jpg', 'Coffret de douceurs au chocolat.'],
     ['03_bniouen_texture_coupe.jpg', 'Une douceur coupée pour en montrer la texture.'],
     ['04_bniouen_coupe_detail.jpg', 'Détail de l’intérieur d’une douceur au chocolat.'],
@@ -49,7 +49,7 @@ async function main() {
       console.log('Logo original chargé dans l’identité du site.')
     }
     await payload.updateGlobal({ slug: 'home', user, data: { _status: 'published',
-      hero: { title: site.tagline, text: 'Un univers de douceurs, imaginé autour du bniouen.', image: ids[0] },
+      hero: { title: site.tagline, text: 'Un univers de douceurs, imaginé pour vos moments de partage.', image: ids[0] },
       craftsmanship: { title: 'Le soin du geste, la douceur du partage.', text: home.craftsmanship?.text, image: ids[5] },
     } })
     console.log(`${ids.length} visuels temporaires importés. Aucun produit ou prix n’a été créé.`)
