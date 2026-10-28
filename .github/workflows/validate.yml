@@ -1,0 +1,45 @@
+name: Validate application
+
+on:
+  pull_request:
+    branches: [develop, main]
+  push:
+    branches: [backend, frontend, data]
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: hilouw
+          POSTGRES_DB: hilouw_test
+          POSTGRES_PASSWORD: ci-only-test-password
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U hilouw -d hilouw_test"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      DATABASE_URL: postgresql://hilouw:ci-only-test-password@127.0.0.1:5432/hilouw_test
+      PAYLOAD_SECRET: ci-only-placeholder-secret-not-for-production-00000000
+      NEXT_PUBLIC_SITE_URL: http://localhost:3100
+      NEXT_TELEMETRY_DISABLED: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - run: npm run generate:types && npm run generate:importmap
+      - run: git diff --exit-code -- src/payload-types.ts 'src/app/(payload)/admin/importMap.js'
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run migrate
+      - run: npm run build
+      - run: npm run test:integration
