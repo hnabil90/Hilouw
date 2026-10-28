@@ -35,7 +35,7 @@
   --noise: 0;
 }
 
-:root { --font-body: "DM Sans Variable", sans-serif; --font-display: "Cormorant Garamond Variable", Georgia, serif; }
+:root { --font-body: "DM Sans Variable", sans-serif; --font-display: "Bodoni Moda Variable", Didot, Georgia, serif; }
 html { scroll-behavior: smooth; scroll-padding-top: 2rem; }
 body { margin: 0; font-family: var(--font-body); font-size: 16px; line-height: 1.75; -webkit-font-smoothing: antialiased; }
 *, *::before, *::after { box-sizing: border-box; }
@@ -70,9 +70,9 @@ p { text-wrap: pretty; }
 .skip-link:focus { top: 1rem; }
 .site-header { position: relative; z-index: 30; border-bottom: 1px solid var(--color-base-300); background: var(--color-base-100); }
 .header-inner { width: min(100% - clamp(2.5rem, 8vw, 8rem), 1440px); margin: auto; min-height: 108px; display: flex; align-items: center; justify-content: space-between; gap: 2rem; }
-.wordmark { display: block; font-size: 1.75rem; font-weight: 500; font-style: italic; letter-spacing: .06em; line-height: 1.15; color: var(--color-primary); text-align: center; }
+.wordmark { display: block; flex-shrink: 0; font-size: 1.75rem; font-weight: 500; font-style: italic; letter-spacing: .06em; line-height: 1.15; color: var(--color-primary); text-align: center; }
 .wordmark span { display: block; font-family: var(--font-body); font-size: .57rem; letter-spacing: .16em; font-weight: 500; font-style: normal; margin-top: .55rem; }
-.brand-logo { width: auto; height: 88px; max-width: 180px; object-fit: contain; }
+.brand-logo { width: 216px; height: auto; max-height: 96px; object-fit: contain; }
 .footer-logo { width: 180px; height: auto; }
 .desktop-nav { display: flex; gap: clamp(1.2rem, 3vw, 2.8rem); font-size: .85rem; }
 .desktop-nav a { padding-block: .6rem; border-bottom: 1px solid transparent; }
@@ -276,7 +276,7 @@ figcaption { margin-top: .6rem; font-size: .75rem; }
   .header-inner { min-height: 86px; }
   .wordmark { font-size: 1.5rem; }
   .wordmark span { font-size: .48rem; }
-  .brand-logo { height: 70px; max-width: 140px; }
+  .brand-logo { width: 156px; height: auto; max-height: 70px; }
   .desktop-nav, .contact-nav { display: none; }
   .menu-toggle { display: inline-flex; background: transparent; border: 0; gap: .8rem; padding-inline: .5rem; }
   .menu-toggle span { font-size: 1.2rem; }

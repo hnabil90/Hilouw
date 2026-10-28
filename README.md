@@ -65,7 +65,11 @@ Toutes les pages lisent le CMS côté serveur en appliquant les permissions publ
 
 L’accueil affiche les produits et membres marqués « Mettre en avant », ainsi que les dernières actualités publiées. Une seule création bénéficie d’une composition dédiée ; les sections sans contenu ne créent pas de cartes fictives. Les listes gèrent la pagination. Les pages vides proposent un état d’attente. Le logo et les liens se règlent dans « Identité du site » ; le reste de l’accueil se publie dans « Accueil ».
 
-Les polices Cormorant Garamond et DM Sans sont auto-hébergées. Les images ont des dimensions explicites et des variantes responsive ; le visuel principal est chargé en priorité. Le menu mobile gère le clavier, Échap et le focus. La galerie respecte le mouvement réduit. Les vidéos externes nécessitent un clic avant connexion à YouTube/Vimeo. Aucun outil de suivi n’est ajouté.
+Les polices Bodoni Moda (titres) et DM Sans (textes courants) sont auto-hébergées. Pour les changer, mettre à jour les imports Fontsource dans `src/app/(site)/layout.tsx` et les variables `--font-display` et `--font-body` dans `src/app/(site)/styles.css`. La police des titres évoque le lettrage du logo sans en reproduire les ornements.
+
+Le logo transparent fourni dans `public/brand/hilouw-logo-transparent.png` est utilisé par défaut dans l’en-tête. Un logo sélectionné dans le CMS, sous « Identité du site », prend la priorité. Ce fichier a été préparé avec l’outil de génération d’image intégré à partir du visuel fourni : conserver le logo central et ses textes, améliorer la netteté et supprimer le fond, le cadre et les fleurs des coins.
+
+Les images ont des dimensions explicites et des variantes responsive ; le visuel principal est chargé en priorité. Le menu mobile gère le clavier, Échap et le focus. La galerie respecte le mouvement réduit. Les vidéos externes nécessitent un clic avant connexion à YouTube/Vimeo. Aucun outil de suivi n’est ajouté.
 
 Les métadonnées, URL canoniques, partages sociaux et données structurées produit utilisent les contenus publiés. `SITE_INDEXABLE=false` conserve le site hors indexation, avec `robots.txt` restrictif et sitemap vide. Passer à `true` seulement lorsque les contenus réels et les informations légales sont prêts. Les réglages SEO « Exclure » du CMS restent prioritaires. L’exclusion des moteurs n’est pas un contrôle d’accès ; les pages publiées restent accessibles.
 

@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 import type { ReactNode } from 'react'
-import '@fontsource-variable/cormorant-garamond'
+import '@fontsource-variable/bodoni-moda'
 import '@fontsource-variable/dm-sans'
 import { identity } from '@/lib/cms'
 import { serverURL } from '@/lib/environment'
@@ -23,5 +23,5 @@ export async function generateMetadata(): Promise<Metadata> {
 export default async function Layout({ children }: { children: ReactNode }) {
   const site = await identity()
   return <html lang="fr" data-theme="hilouw"><body><a className="skip-link" href="#contenu">Aller au contenu</a>
-    <Header name={site.name} subtitle={site.subtitle} logo={site.logo} links={site.navigation} /><main id="contenu">{children}</main><Footer site={site} /></body></html>
+    <Header name={site.name} logo={site.logo} links={site.navigation} /><main id="contenu">{children}</main><Footer site={site} /></body></html>
 }
