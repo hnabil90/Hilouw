@@ -2,6 +2,7 @@ import { postgresAdapter } from '@payloadcms/db-postgres'
 import { lexicalEditor } from '@payloadcms/richtext-lexical'
 import { fr } from '@payloadcms/translations/languages/fr'
 import { s3Storage } from '@payloadcms/storage-s3'
+import { resendAdapter } from '@payloadcms/email-resend'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { buildConfig } from 'payload'
@@ -61,7 +62,11 @@ export default buildConfig({
       },
     } : { region: 'us-east-1' },
   })],
-  email: () => ({
+  email: process.env.RESEND_API_KEY && process.env.CONTACT_FROM ? resendAdapter({
+    apiKey: process.env.RESEND_API_KEY,
+    defaultFromAddress: process.env.CONTACT_FROM.match(/<([^<>]+)>$/)?.[1] || process.env.CONTACT_FROM,
+    defaultFromName: 'HILOUW',
+  }) : () => ({
     name: 'not-configured',
     defaultFromAddress: 'not-configured@example.invalid',
     defaultFromName: 'HILOUW',

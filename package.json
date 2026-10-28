@@ -3,7 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "engines": { "node": ">=24.22.1 <25" },
+  "engines": {
+    "node": ">=24.22.1 <25"
+  },
   "scripts": {
     "dev": "next dev",
     "build": "next build --webpack",
@@ -16,10 +18,15 @@
     "generate:importmap": "payload generate:importmap",
     "migrate": "payload migrate",
     "migrate:create": "payload migrate:create",
-    "bootstrap:admin": "tsx scripts/bootstrap-admin.ts"
+    "bootstrap:admin": "tsx scripts/bootstrap-admin.ts",
+    "preview:media": "tsx scripts/import-preview-media.ts",
+    "test:e2e": "playwright test"
   },
   "dependencies": {
+    "@fontsource-variable/cormorant-garamond": "^5.2.0",
+    "@fontsource-variable/dm-sans": "^5.2.0",
     "@payloadcms/db-postgres": "3.92.1",
+    "@payloadcms/email-resend": "3.92.1",
     "@payloadcms/next": "3.92.1",
     "@payloadcms/richtext-lexical": "3.92.1",
     "@payloadcms/storage-s3": "3.92.1",
@@ -27,17 +34,20 @@
     "@payloadcms/ui": "3.92.1",
     "dotenv": "^16.4.7",
     "graphql": "^16.11.0",
+    "motion": "14.7.1",
     "next": "16.4.3",
     "payload": "3.92.1",
     "react": "19.3.1",
     "react-dom": "19.3.1",
-    "sharp": "0.35.5"
+    "sharp": "0.35.5",
+    "zod": "4.6.7"
   },
   "overrides": {
     "dompurify": "3.4.17",
     "happy-dom": "21.0.4"
   },
   "devDependencies": {
+    "@playwright/test": "^1.56.0",
     "@tailwindcss/postcss": "^4.1.0",
     "@types/node": "^24.0.0",
     "@types/react": "^19.3.0",
