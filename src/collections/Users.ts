@@ -48,6 +48,7 @@ export const Users: CollectionConfig = {
       saveToJWT: true,
       options: [
         { label: 'Administrateur', value: 'admin' },
+        { label: 'Gestionnaire du catalogue', value: 'catalog-manager' },
         { label: 'Éditeur', value: 'editor' },
       ],
       access: { create: isAdminField, update: isAdminField },
