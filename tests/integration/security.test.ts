@@ -7,6 +7,8 @@ import { setTimeout } from 'node:timers/promises'
 import { test } from 'node:test'
 import { getPayload } from 'payload'
 import sharp from 'sharp'
+import { sql } from '@payloadcms/db-postgres'
+import { consumeContactRate } from '../../src/lib/contact-rate'
 import config from '../../src/payload.config.js'
 
 // Une base dédiée évite de créer ou supprimer des comptes dans une vraie base.
@@ -127,12 +129,12 @@ test('migrations, authentification et droits réels sur PostgreSQL', async (t) =
   await t.test('un changement du CMS est rendu sur la page publique', async () => {
     const original = await payload.findGlobal({ slug: 'site-settings' })
     try {
-      await payload.updateGlobal({ slug: 'site-settings', data: { holdingMessage: 'Message de vérification CMS.' } })
+      await payload.updateGlobal({ slug: 'site-settings', data: { tagline: 'Message de vérification CMS.' } })
       const response = await request(base)
       assert.equal(response.status, 200)
       assert.match(await response.text(), /Message de vérification CMS\./)
     } finally {
-      await payload.updateGlobal({ slug: 'site-settings', data: { holdingMessage: original.holdingMessage } })
+      await payload.updateGlobal({ slug: 'site-settings', data: { tagline: original.tagline } })
     }
   })
 
@@ -214,6 +216,9 @@ test('migrations, authentification et droits réels sur PostgreSQL', async (t) =
     assert.equal(published.name, 'Produit de test')
     assert.equal(published.price?.amount ?? null, null)
     assert.equal(published.gallery[0].image.id, catalogPhoto.id)
+    const detailPage = await request(`${base}/produits/produit-de-test`)
+    assert.equal(detailPage.status, 200)
+    assert.match(await detailPage.text(), /Informations fictives de test/)
     assert.equal((await fileStatus(catalogPhoto.url)).status, 200)
     const thumbnail = await fileStatus(catalogPhoto.sizes.thumbnail.url)
     assert.equal(thumbnail.status, 200)
@@ -236,6 +241,7 @@ test('migrations, authentification et droits réels sur PostgreSQL', async (t) =
     assert.equal((await fileStatus(catalogPhoto.url)).status, 403)
     assert.equal((await request(`${base}/api/products/${productID}`, { method: 'DELETE', headers: { Authorization: `JWT ${managerToken}` } })).status, 403)
     assert.equal((await payload.findByID({ collection: 'products', id: productID })).archived, true)
+    assert.equal((await request(`${base}/produits/produit-de-test`)).status, 404)
   })
 
   await t.test('actualités futures et membres brouillons sont exclus de la lecture publique', async () => {
@@ -274,8 +280,36 @@ test('migrations, authentification et droits réels sur PostgreSQL', async (t) =
       const legal = await payload.findGlobal({ slug: 'terms', draft: true })
       assert.equal(legal.validationStatus, 'provisional')
     } finally {
-      await payload.updateGlobal({ slug: 'home', data: { ...initialHome, _status: 'draft' } })
-      await payload.updateGlobal({ slug: 'terms', data: { title: null, content: null, _status: 'draft' } })
+      await payload.updateGlobal({ slug: 'home', user: { ...admin, collection: 'users' }, data: { ...initialHome, _status: initialHome._status || 'draft' } })
+      await payload.updateGlobal({ slug: 'terms', user: { ...admin, collection: 'users' }, data: { title: null, content: null, _status: 'draft' } })
+    }
+  })
+
+  await t.test('les pages publiques, les erreurs et les métadonnées répondent correctement', async () => {
+    for (const path of ['/', '/produits', '/actualites', '/equipe', '/contact', '/cgv', '/mentions-legales']) {
+      const response = await request(`${base}${path}`)
+      assert.equal(response.status, 200, path)
+      const html = await response.text()
+      assert.match(html, /<html[^>]*lang="fr"/)
+      assert.match(html, /noindex/)
+    }
+    assert.match(await (await request(`${base}/cgv`)).text(), /Texte provisoire/)
+    assert.equal((await request(`${base}/produits/inconnu`)).status, 404)
+    assert.equal((await request(`${base}/actualites/inconnu`)).status, 404)
+    assert.equal((await request(`${base}/inconnue`)).status, 404)
+    assert.match(await (await request(`${base}/robots.txt`)).text(), /Disallow: \//)
+    assert.doesNotMatch(await (await request(`${base}/sitemap.xml`)).text(), /produit-de-test/)
+  })
+
+  await t.test('la limitation d’envoi est atomique et persiste dans PostgreSQL', async () => {
+    const key = `test-${randomBytes(12).toString('hex')}`
+    try {
+      const results = await Promise.all(Array.from({ length: 12 }, () => consumeContactRate(payload.db.drizzle, key)))
+      assert.equal(results.filter(Boolean).length, 5)
+      assert.equal(await consumeContactRate(payload.db.drizzle, key), false)
+      assert.equal(await consumeContactRate(payload.db.drizzle, key, Date.now() + 901000), true)
+    } finally {
+      await payload.db.drizzle.execute(sql`DELETE FROM payload_kv WHERE "key" IN (${`contact:${key}`}, 'contact:global')`)
     }
   })
 })

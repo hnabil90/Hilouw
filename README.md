@@ -1,6 +1,6 @@
 # HILOUW — Site et CMS
 
-Site Next.js App Router + Payload CMS + PostgreSQL, destiné au serveur Debian derrière Apache. Le CMS permet de gérer le catalogue, les actualités, l’équipe, les médias et les textes des pages. Le site public reste une page d’attente ; les pages du catalogue, le design final et le formulaire Resend seront ajoutés à l’étape frontend.
+Site Next.js App Router + Payload CMS + PostgreSQL, destiné au serveur Debian derrière Apache. Le CMS gère le catalogue, les actualités, l’équipe, les médias et les textes des pages. Le frontend comprend l’accueil, le catalogue et ses fiches, le journal et ses articles, l’équipe, le contact, les CGV et les mentions légales. Aucune fonction de panier ou paiement.
 
 ## Prérequis
 
@@ -24,7 +24,7 @@ npm run dev
 
 Le site est sur `http://localhost:3000` et le CMS sur `/admin`. La commande d’initialisation demande les identifiants dans le terminal, masque le mot de passe et refuse d’ajouter un compte si un utilisateur existe déjà. Le formulaire public de création du premier compte est bloqué. Les administrateurs créent ensuite les autres comptes dans le CMS. Aucun mot de passe par défaut.
 
-Le nom `/admin` désigne l’espace CMS ; les gestionnaires du catalogue et les éditeurs s’y connectent aussi. Aucun service d’email n’est configuré à cette étape ; la récupération de mot de passe par email sera activée avec le service transactionnel.
+Le nom `/admin` désigne l’espace CMS ; les gestionnaires du catalogue et les éditeurs s’y connectent aussi. Resend sert au contact et aux emails du CMS, dont la récupération de mot de passe, une fois `RESEND_API_KEY` et `CONTACT_FROM` configurés. Sans ces variables, les envois sont désactivés et aucun contenu d’email ou jeton de réinitialisation n’est écrit dans les logs.
 
 ## Rôles et utilisation du CMS
 
@@ -47,7 +47,33 @@ L’ordre numérique trie les produits et membres ; la case « Mettre en avant �
 
 Les articles disposent d’un éditeur riche, d’une couverture, d’une galerie d’images/vidéos et d’un lien YouTube/Vimeo facultatif. Une date future empêche la lecture publique avant cette date. Les champs texte riche n’acceptent pas de médias imbriqués : utiliser les galeries explicites pour maintenir le contrôle de diffusion des fichiers.
 
-Les contenus éditoriaux et produits disposent de brouillons et d’un historique limité à 25 versions. Une lecture publique ne renvoie que les publications ; l’accès aux brouillons et à l’historique exige les droits correspondants. Les CGV et mentions légales démarrent vides avec le statut **Provisoire — à faire valider**. Leur affichage et la bannière provisoire seront raccordés aux futures pages publiques. Le statut « Validé par le propriétaire » reste une indication éditoriale, pas une certification juridique.
+Les contenus éditoriaux et produits disposent de brouillons et d’un historique limité à 25 versions. Une lecture publique ne renvoie que les publications ; l’accès aux brouillons et à l’historique exige les droits correspondants. Les CGV et mentions légales démarrent vides avec le statut **Provisoire — à faire valider**, affiché dans une bannière publique. Le statut « Validé par le propriétaire » reste une indication éditoriale, pas une certification juridique.
+
+## Frontend et publication des contenus
+
+Toutes les pages lisent le CMS côté serveur en appliquant les permissions publiques, même pour un visiteur déjà connecté au CMS. Les lectures sont dynamiques : publication, retrait et archivage sont visibles sans reconstruction. Les données CMS sont mémorisées uniquement pendant la requête React, pas dans un cache partagé avec les brouillons. Les fiches inconnues, non publiées et archivées répondent avec un vrai statut 404.
+
+L’accueil affiche les produits et membres marqués « Mettre en avant », ainsi que les dernières actualités publiées. Une seule création bénéficie d’une composition dédiée ; les sections sans contenu ne créent pas de cartes fictives. Les listes gèrent la pagination. Les pages vides proposent un état d’attente. Le logo et les liens se règlent dans « Identité du site » ; le reste de l’accueil se publie dans « Accueil ».
+
+Les polices Cormorant Garamond et DM Sans sont auto-hébergées. Les images ont des dimensions explicites et des variantes responsive ; le visuel principal est chargé en priorité. Le menu mobile gère le clavier, Échap et le focus. La galerie respecte le mouvement réduit. Les vidéos externes nécessitent un clic avant connexion à YouTube/Vimeo. Aucun outil de suivi n’est ajouté.
+
+Les métadonnées, URL canoniques, partages sociaux et données structurées produit utilisent les contenus publiés. `SITE_INDEXABLE=false` conserve le site hors indexation, avec `robots.txt` restrictif et sitemap vide. Passer à `true` seulement lorsque les contenus réels et les informations légales sont prêts. Les réglages SEO « Exclure » du CMS restent prioritaires. L’exclusion des moteurs n’est pas un contrôle d’accès ; les pages publiées restent accessibles.
+
+### Visuels temporaires locaux
+
+Les images fournies dans `media/` sont ignorées par Git. `npm run preview:media` importe les huit fichiers numérotés dans une base locale dont le nom finit par `_test`, puis publie uniquement les images du hero et du savoir-faire. Les visuels portent la légende « Visuel d’ambiance temporaire » ; aucun produit, prix, témoignage ou membre fictif n’est créé. Le script refuse une base de production et un site indexable. Il supprime le compte technique éphémère éventuellement créé pour l’import. Les originaux ne sont pas supprimés.
+
+Pour le logo : le téléverser dans la médiathèque, puis le sélectionner dans « Identité du site → Logo ». Il sera utilisé dans l’en-tête et le pied de page. Les fichiers de la médiathèque et la base doivent être transférés ou les médias téléversés à nouveau lors du passage au serveur ; un `git pull` seul ne transfère pas les données locales.
+
+## Formulaire de contact et Resend
+
+Configurer `RESEND_API_KEY`, `CONTACT_FROM` (adresse d’expédition vérifiée chez Resend) et `CONTACT_TO` (destinataire). Les clés ne sont jamais transmises au navigateur. En production, configurer aussi le header Apache décrit plus bas et `TRUST_PROXY=true`. Sans ces éléments, le formulaire affiche son indisponibilité et ne prétend pas envoyer de message. Les coordonnées publiques, distinctes du destinataire technique, se règlent dans le CMS.
+
+Le formulaire valide les champs côté client et serveur, exige la prise de connaissance du traitement des données, contrôle l’origine et le type de contenu, limite la requête à 16 Ko et utilise un champ piège antispam. Les messages sont envoyés en texte brut ; le champ email validé sert de Reply-To. La confirmation est affichée seulement après réception de l’identifiant d’acceptation Resend. Cela confirme la prise en charge par le fournisseur, pas la livraison finale.
+
+La limitation est atomique dans PostgreSQL, partagée entre instances : 5 tentatives par client sur 15 minutes et 50 par heure au total. Seule une empreinte HMAC de l’adresse IP est stockée, avec un compteur et une échéance ; les entrées expirées depuis plus de 24 heures sont nettoyées lors des demandes suivantes. Aucun nom, email ou texte de message n’est enregistré dans la base du site. Le fournisseur email et la boîte destinataire peuvent conserver les messages : compléter l’information de la page Contact et définir leur conservation avant ouverture du formulaire.
+
+Le domaine d’envoi doit être vérifié chez Resend. Ajouter uniquement les enregistrements DNS qu’il fournit, en conservant les MX OVH et sans créer plusieurs enregistrements SPF concurrents. Ne jamais coller les clés dans le dépôt ou les captures d’écran.
 
 ## Médiathèque et stockage
 
@@ -68,15 +94,19 @@ npm run typecheck
 npm test
 npm run build
 npm run test:integration
+npx playwright install chromium
+npm run test:e2e
 ```
 
 Le build ne doit pas dépendre d’une base active : les pages reliées au CMS sont dynamiques. `/api/health` vérifie une requête réelle à PostgreSQL et retourne 503 en cas d’indisponibilité, sans détails internes. Le site reste exclu de l’indexation jusqu’à sa finalisation.
 
-Les tests d’intégration exigent une base dédiée sans comptes dont le nom finit par `_test`. Ils démarrent un serveur de production local sur `127.0.0.1:3100`, créent des comptes et contenus fictifs puis les suppriment. Ils couvrent la séparation des rôles, les uploads, les médias privés, la publication, les brouillons, l’archivage, les articles futurs et les pages légales. Ne pas les exécuter contre une base contenant des données réelles. Le runner utilise `--test-force-exit` après la fin des tests, car l’adaptateur PostgreSQL Payload 3.92.1 garde un client de reconnexion après `destroy()`.
+Les tests d’intégration exigent une base dédiée sans comptes dont le nom finit par `_test`. Ils démarrent un serveur de production local sur `127.0.0.1:3100`, créent des comptes et contenus fictifs puis les suppriment. Ils couvrent les rôles, les uploads, les médias privés, la publication, les brouillons, l’archivage, les articles futurs, les pages légales, les 404 et les limites d’envoi concurrentes. Ne pas les exécuter contre une base contenant des données réelles. Le runner utilise `--test-force-exit` après la fin des tests, car l’adaptateur PostgreSQL Payload 3.92.1 garde un client de reconnexion après `destroy()`.
+
+Les tests Chromium utilisent le port 3200 et couvrent 375/768/1440 px, l’absence de débordement, le menu au clavier, la galerie, la navigation vers Contact, la validation et les erreurs d’envoi, ainsi que le mouvement réduit. Les réponses email y sont simulées dans le navigateur : aucun email réel n’est envoyé. La livraison réelle Resend et le stockage S3 doivent être vérifiés avec vos services configurés.
 
 ### État des dépendances
 
-Les correctifs `sharp 0.35.5`, `dompurify 3.4.17` et `happy-dom 21.0.4` sont verrouillés pour éliminer les alertes élevées et critiques présentes dans les versions initiales. Après ajout de S3, l’audit compte 9 alertes faibles via `deepmerge` dans Payload et ses adaptateurs, et 5 modérées via l’ancien outil de migration Drizzle/esbuild. Aucun `npm audit fix --force` : npm propose une rétrogradation incompatible de Payload. Ces alertes restent ouvertes ; revoir les versions et leur applicabilité avant la mise en production des contenus.
+Les correctifs `sharp 0.35.5`, `dompurify 3.4.17` et `happy-dom 21.0.4` sont verrouillés pour éliminer les alertes élevées et critiques présentes dans les versions initiales. Après ajout des adaptateurs S3 et Resend, l’audit compte 10 alertes faibles via `deepmerge` dans Payload et ses adaptateurs, et 5 modérées via l’ancien outil de migration Drizzle/esbuild. Aucun `npm audit fix --force` : npm propose une rétrogradation incompatible de Payload. Ces alertes restent ouvertes ; revoir les versions et leur applicabilité avant la mise en production des contenus.
 
 ## Migrations
 
@@ -105,11 +135,13 @@ Sauvegarder les fichiers des virtual hosts actuels. Dans le virtual host HTTPS g
 ProxyRequests Off
 ProxyPreserveHost On
 RequestHeader set X-Forwarded-Proto "https"
+RequestHeader unset X-Hilouw-Client-IP
+RequestHeader set X-Hilouw-Client-IP "expr=%{REMOTE_ADDR}"
 ProxyPass / http://127.0.0.1:3000/
 ProxyPassReverse / http://127.0.0.1:3000/
 ```
 
-Conserver le virtual host HTTP et sa redirection HTTPS. Vérifier `sudo apache2ctl configtest` avant `sudo systemctl reload apache2`. Tester le site, `/api/health`, la connexion `/admin` et `sudo certbot renew --dry-run`. Le remplacement du site temporaire n’est pas effectué par ce dépôt. En cas de problème, restaurer la configuration Apache sauvegardée et la recharger.
+Conserver le virtual host HTTP et sa redirection HTTPS. Les directives `X-Hilouw-Client-IP` remplacent toute valeur fournie par un visiteur par l’adresse observée par Apache ; Next.js ne doit rester accessible que sur loopback. Activer ensuite `TRUST_PROXY=true` dans `.env` pour le contact. Vérifier `sudo apache2ctl configtest` avant `sudo systemctl reload apache2`. Tester le site, `/api/health`, la connexion `/admin` et `sudo certbot renew --dry-run`. Le remplacement du site temporaire n’est pas effectué par ce dépôt. En cas de problème, restaurer la configuration Apache sauvegardée et la recharger.
 
 ## Sauvegardes et mises à jour
 
