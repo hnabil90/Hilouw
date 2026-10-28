@@ -19,6 +19,7 @@
     "migrate": "payload migrate",
     "migrate:create": "payload migrate:create",
     "bootstrap:admin": "tsx scripts/bootstrap-admin.ts",
+    "reset:admin-password": "tsx scripts/reset-admin-password.ts",
     "preview:media": "tsx scripts/import-preview-media.ts",
     "test:e2e": "playwright test"
   },

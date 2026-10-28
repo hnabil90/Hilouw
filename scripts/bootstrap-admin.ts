@@ -1,36 +1,20 @@
 import 'dotenv/config'
-import { createInterface } from 'node:readline/promises'
-import { Writable } from 'node:stream'
 import { getPayload } from 'payload'
 import config from '../src/payload.config.js'
-
-let hidden = false
-const output = new Writable({
-  write(chunk, _encoding, callback) {
-    if (!hidden) process.stdout.write(chunk)
-    callback()
-  },
-})
+import { createPasswordTerminal } from './password-terminal.js'
 
 async function main() {
   const payload = await getPayload({ config })
-  const terminal = createInterface({ input: process.stdin, output, terminal: Boolean(process.stdin.isTTY) })
+  const terminal = createPasswordTerminal()
   try {
     const existing = await payload.count({ collection: 'users', overrideAccess: true })
     if (existing.totalDocs !== 0) {
       throw new Error('Un utilisateur existe déjà. Gérer les comptes depuis /admin.')
     }
-    if (!process.stdin.isTTY) {
-      throw new Error('Exécuter cette commande dans un terminal interactif (docker compose run --rm manage …).')
-    }
     const email = (await terminal.question('Email administrateur : ')).trim()
     const name = (await terminal.question('Nom : ')).trim()
-    process.stdout.write('Mot de passe (12 caractères minimum, saisie masquée) : ')
-    hidden = true
-    const password = await terminal.question('')
-    hidden = false
-    process.stdout.write('\n')
-    if (!email || !name || password.length < 12) throw new Error('Email, nom et mot de passe de 12 caractères minimum requis.')
+    const password = await terminal.confirmedPassword()
+    if (!email || !name) throw new Error('Email et nom requis.')
 
     await payload.create({
       collection: 'users',
@@ -39,7 +23,6 @@ async function main() {
     })
     console.log('Administrateur créé. Connexion possible sur /admin.')
   } finally {
-    hidden = false
     terminal.close()
     await payload.destroy()
   }

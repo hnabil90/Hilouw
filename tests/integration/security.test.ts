@@ -9,6 +9,7 @@ import { getPayload } from 'payload'
 import sharp from 'sharp'
 import { sql } from '@payloadcms/db-postgres'
 import { consumeContactRate } from '../../src/lib/contact-rate'
+import { resetAdminPassword } from '../../scripts/reset-admin-password'
 import config from '../../src/payload.config.js'
 
 // Une base dédiée évite de créer ou supprimer des comptes dans une vraie base.
@@ -311,5 +312,22 @@ test('migrations, authentification et droits réels sur PostgreSQL', async (t) =
     } finally {
       await payload.db.drizzle.execute(sql`DELETE FROM payload_kv WHERE "key" IN (${`contact:${key}`}, 'contact:global')`)
     }
+  })
+
+  await t.test('la récupération SSH refuse une confirmation incorrecte et récupère un admin verrouillé', async () => {
+    const newPassword = randomBytes(24).toString('hex')
+    await assert.rejects(() => resetAdminPassword(payload, admin.email, newPassword, `${newPassword}x`), /ne correspondent pas/)
+    assert.equal((await post('/api/users/login', { email: admin.email, password })).status, 200)
+    await assert.rejects(() => resetAdminPassword(payload, editor.email, newPassword, newPassword), /Aucun compte administrateur/)
+    await payload.update({ collection: 'users', id: admin.id, data: { loginAttempts: 5, lockUntil: new Date(Date.now() + 600000).toISOString() } })
+    assert.ok((await post('/api/users/login', { email: admin.email, password })).status >= 400)
+    await resetAdminPassword(payload, admin.email.toUpperCase(), newPassword, newPassword)
+    const account = await payload.findByID({ collection: 'users', id: admin.id, showHiddenFields: true })
+    assert.equal(account.loginAttempts, 0)
+    assert.equal(account.lockUntil, null)
+    assert.deepEqual(account.sessions, [])
+    assert.equal(account.resetPasswordToken, null)
+    assert.equal((await post('/api/users/login', { email: admin.email, password: newPassword })).status, 200)
+    assert.equal((await post('/api/users/login', { email: admin.email, password })).status, 401)
   })
 })

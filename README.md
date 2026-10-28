@@ -22,7 +22,17 @@ npm run bootstrap:admin
 npm run dev
 ```
 
-Le site est sur `http://localhost:3000` et le CMS sur `/admin`. La commande d’initialisation demande les identifiants dans le terminal, masque le mot de passe et refuse d’ajouter un compte si un utilisateur existe déjà. Le formulaire public de création du premier compte est bloqué. Les administrateurs créent ensuite les autres comptes dans le CMS. Aucun mot de passe par défaut.
+Le site est sur `http://localhost:3000` et le CMS sur `/admin`. La commande d’initialisation demande les identifiants et deux saisies masquées du mot de passe. Elle refuse une confirmation différente et n’ajoute pas de compte si un utilisateur existe déjà. Le formulaire public de création du premier compte est bloqué. Les administrateurs créent ensuite les autres comptes dans le CMS. Aucun mot de passe par défaut.
+
+### Récupération administrateur depuis SSH
+
+Si les emails ne sont pas encore configurés ou si le compte est verrouillé, utiliser sur le serveur :
+
+```bash
+sudo docker compose --profile tools run --rm manage npm run reset:admin-password
+```
+
+La commande demande l’email puis deux saisies masquées du nouveau mot de passe. Elle ne cible que les comptes administrateurs existants, ne modifie aucun compte si la confirmation diffère, réinitialise le compteur d’échecs, supprime les anciens jetons de réinitialisation et ferme les sessions précédentes. Ne jamais transmettre le mot de passe dans les arguments, les variables d’environnement ou le chat. Après une mise à jour du code des commandes, reconstruire l’image de gestion avec `sudo docker compose --profile tools build manage`.
 
 Le nom `/admin` désigne l’espace CMS ; les gestionnaires du catalogue et les éditeurs s’y connectent aussi. Resend sert au contact et aux emails du CMS, dont la récupération de mot de passe, une fois `RESEND_API_KEY` et `CONTACT_FROM` configurés. Sans ces variables, les envois sont désactivés et aucun contenu d’email ou jeton de réinitialisation n’est écrit dans les logs.
 
