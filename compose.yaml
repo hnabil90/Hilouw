@@ -1,0 +1,73 @@
+name: hilouw
+
+x-app-environment: &app-environment
+  NODE_ENV: production
+  DATABASE_URL: postgresql://${POSTGRES_USER:-hilouw}:${POSTGRES_PASSWORD:?Mot de passe PostgreSQL requis}@db:5432/${POSTGRES_DB:-hilouw}
+  PAYLOAD_SECRET: ${PAYLOAD_SECRET:?Secret Payload requis}
+  NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL:-https://hilouw.com}
+  NEXT_TELEMETRY_DISABLED: "1"
+  S3_BUCKET: ${S3_BUCKET:-}
+  S3_REGION: ${S3_REGION:-}
+  S3_ENDPOINT: ${S3_ENDPOINT:-}
+  S3_ACCESS_KEY_ID: ${S3_ACCESS_KEY_ID:-}
+  S3_SECRET_ACCESS_KEY: ${S3_SECRET_ACCESS_KEY:-}
+  S3_FORCE_PATH_STYLE: ${S3_FORCE_PATH_STYLE:-false}
+  SITE_INDEXABLE: ${SITE_INDEXABLE:-false}
+  RESEND_API_KEY: ${RESEND_API_KEY:-}
+  CONTACT_FROM: ${CONTACT_FROM:-}
+  CONTACT_TO: ${CONTACT_TO:-}
+  TRUST_PROXY: ${TRUST_PROXY:-false}
+
+services:
+  db:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-hilouw}
+      POSTGRES_DB: ${POSTGRES_DB:-hilouw}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Mot de passe PostgreSQL requis}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  app:
+    build:
+      context: .
+      target: runtime
+    restart: unless-stopped
+    init: true
+    environment: *app-environment
+    ports:
+      - "127.0.0.1:3000:3000"
+    volumes:
+      - media_data:/app/media
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 30s
+      timeout: 10s
+      start_period: 90s
+      retries: 3
+
+  manage:
+    profiles: ["tools"]
+    build:
+      context: .
+      target: tooling
+    environment: *app-environment
+    volumes:
+      - media_data:/app/media
+    depends_on:
+      db:
+        condition: service_healthy
+    command: ["npm", "run", "migrate"]
+
+volumes:
+  postgres_data:
+  media_data:
