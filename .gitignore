@@ -1,1 +1,14 @@
 /docs/
+/.tools/
+/node_modules/
+/.next/
+/out/
+/coverage/
+/.env*
+!/.env.example
+!/.env.production.example
+*.tsbuildinfo
+*.log
+/backups/
+/media/
+.docs/
