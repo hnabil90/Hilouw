@@ -11,7 +11,7 @@ export const SiteSettings: GlobalConfig = {
   fields: [
     { name: 'name', label: 'Nom de la marque', type: 'text', required: true, defaultValue: 'HILOUW' },
     { name: 'subtitle', label: 'Sous-titre', type: 'text', defaultValue: 'Douceurs & Créations' },
-    { name: 'tagline', label: 'Signature', type: 'text', defaultValue: 'Le bniouen, tout simplement irrésistible.' },
+    { name: 'tagline', label: 'Signature', type: 'text', defaultValue: 'Des douceurs, tout simplement irrésistibles.' },
     { name: 'holdingMessage', label: 'Message avant ouverture', type: 'textarea', defaultValue: 'Notre site est en préparation.' },
     image('logo', 'Logo'),
     { name: 'contactEmail', label: 'Adresse email publique', type: 'email' },
