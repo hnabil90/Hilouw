@@ -8,7 +8,7 @@ import { validLink } from '@/fields/editorial'
 import { mediaObject } from '@/lib/presentation'
 import { Photo } from './Media'
 
-export function Header({ name, subtitle, logo, links }: { name: string; subtitle?: string | null; logo?: SiteSetting['logo']; links: SiteSetting['navigation'] }) {
+export function Header({ name, logo, links }: { name: string; logo?: SiteSetting['logo']; links: SiteSetting['navigation'] }) {
   const path = usePathname()
   const [open, setOpen] = useState(false)
   const trigger = useRef<HTMLButtonElement>(null)
@@ -36,7 +36,9 @@ export function Header({ name, subtitle, logo, links }: { name: string; subtitle
     return () => { document.body.style.overflow = previous; window.removeEventListener('keydown', keydown) }
   }, [open])
   return <header className="site-header"><div className="header-inner">
-    <Link href="/" className="wordmark" aria-label={`${name}, accueil`}>{mediaObject(logo) ? <Photo value={logo} sizes="160px" className="brand-logo" /> : <>{name}<span>{subtitle}</span></>}</Link>
+    <Link href="/" className="wordmark" aria-label={`${name}, accueil`}>{mediaObject(logo)
+      ? <Photo value={logo} eager sizes="(max-width: 760px) 156px, 216px" className="brand-logo" />
+      : <img src="/brand/hilouw-logo-transparent.png" className="brand-logo" alt={`${name} — Douceurs & Créations`} width={1880} height={836} decoding="async" fetchPriority="high" />}</Link>
     <nav className="desktop-nav" aria-label="Navigation principale">{navigation.map((item) => <Link key={item.href} href={item.href} aria-current={path === item.href ? 'page' : undefined}>{item.label}</Link>)}</nav>
     <Link href="/contact" className="btn contact-nav">Parlons douceurs</Link>
     <button ref={trigger} type="button" className="btn btn-ghost menu-toggle" aria-controls="mobile-navigation" aria-expanded={open}

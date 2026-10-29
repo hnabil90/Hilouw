@@ -10,7 +10,7 @@ type SEO = { title?: string | null; description?: string | null; image?: number 
 export async function metadataFor(title: string, path: string, seo?: SEO, description?: string, image?: number | Media | null): Promise<Metadata> {
   const site = await identity()
   const resolvedTitle = seo?.title || title
-  const resolvedDescription = seo?.description || description || site.seo?.description || 'Douceurs et créations artisanales de pâtisserie algérienne.'
+  const resolvedDescription = seo?.description || description || site.seo?.description || 'Douceurs et créations de pâtisserie artisanale.'
   const picture = mediaObject(seo?.image || image || site.seo?.image)
   const picturePath = mediaPath(picture?.url)
   const index = process.env.SITE_INDEXABLE === 'true' && !seo?.noIndex && !site.seo?.noIndex

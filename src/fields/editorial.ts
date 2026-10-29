@@ -43,7 +43,7 @@ export const cta = (name = 'cta', label = 'Bouton'): Field => ({
 
 export const slug: Field = {
   name: 'slug', label: 'Adresse de la page', type: 'text', required: true, unique: true, index: true,
-  admin: { description: 'Exemple : bniouen-chocolat. Lettres minuscules, chiffres et tirets.' },
+  admin: { description: 'Exemple : douceur-chocolat. Lettres minuscules, chiffres et tirets.' },
   validate: (value: unknown) => typeof value === 'string' && /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(value)
     || 'Utiliser des lettres minuscules, chiffres et tirets, sans espace.',
 }

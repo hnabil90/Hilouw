@@ -22,7 +22,17 @@ npm run bootstrap:admin
 npm run dev
 ```
 
-Le site est sur `http://localhost:3000` et le CMS sur `/admin`. La commande d’initialisation demande les identifiants dans le terminal, masque le mot de passe et refuse d’ajouter un compte si un utilisateur existe déjà. Le formulaire public de création du premier compte est bloqué. Les administrateurs créent ensuite les autres comptes dans le CMS. Aucun mot de passe par défaut.
+Le site est sur `http://localhost:3000` et le CMS sur `/admin`. La commande d’initialisation demande les identifiants et deux saisies masquées du mot de passe. Elle refuse une confirmation différente et n’ajoute pas de compte si un utilisateur existe déjà. Le formulaire public de création du premier compte est bloqué. Les administrateurs créent ensuite les autres comptes dans le CMS. Aucun mot de passe par défaut.
+
+### Récupération administrateur depuis SSH
+
+Si les emails ne sont pas encore configurés ou si le compte est verrouillé, utiliser sur le serveur :
+
+```bash
+sudo docker compose --profile tools run --rm manage npm run reset:admin-password
+```
+
+La commande demande l’email puis deux saisies masquées du nouveau mot de passe. Elle ne cible que les comptes administrateurs existants, ne modifie aucun compte si la confirmation diffère, réinitialise le compteur d’échecs, supprime les anciens jetons de réinitialisation et ferme les sessions précédentes. Ne jamais transmettre le mot de passe dans les arguments, les variables d’environnement ou le chat. Après une mise à jour du code des commandes, reconstruire l’image de gestion avec `sudo docker compose --profile tools build manage`.
 
 Le nom `/admin` désigne l’espace CMS ; les gestionnaires du catalogue et les éditeurs s’y connectent aussi. Resend sert au contact et aux emails du CMS, dont la récupération de mot de passe, une fois `RESEND_API_KEY` et `CONTACT_FROM` configurés. Sans ces variables, les envois sont désactivés et aucun contenu d’email ou jeton de réinitialisation n’est écrit dans les logs.
 
@@ -55,7 +65,11 @@ Toutes les pages lisent le CMS côté serveur en appliquant les permissions publ
 
 L’accueil affiche les produits et membres marqués « Mettre en avant », ainsi que les dernières actualités publiées. Une seule création bénéficie d’une composition dédiée ; les sections sans contenu ne créent pas de cartes fictives. Les listes gèrent la pagination. Les pages vides proposent un état d’attente. Le logo et les liens se règlent dans « Identité du site » ; le reste de l’accueil se publie dans « Accueil ».
 
-Les polices Cormorant Garamond et DM Sans sont auto-hébergées. Les images ont des dimensions explicites et des variantes responsive ; le visuel principal est chargé en priorité. Le menu mobile gère le clavier, Échap et le focus. La galerie respecte le mouvement réduit. Les vidéos externes nécessitent un clic avant connexion à YouTube/Vimeo. Aucun outil de suivi n’est ajouté.
+Les polices Bodoni Moda (titres) et DM Sans (textes courants) sont auto-hébergées. Pour les changer, mettre à jour les imports Fontsource dans `src/app/(site)/layout.tsx` et les variables `--font-display` et `--font-body` dans `src/app/(site)/styles.css`. La police des titres évoque le lettrage du logo sans en reproduire les ornements.
+
+Le logo transparent fourni dans `public/brand/hilouw-logo-transparent.png` est utilisé par défaut dans l’en-tête. Un logo sélectionné dans le CMS, sous « Identité du site », prend la priorité. Ce fichier a été préparé avec l’outil de génération d’image intégré à partir du visuel fourni : conserver le logo central et ses textes, améliorer la netteté et supprimer le fond, le cadre et les fleurs des coins.
+
+Les images ont des dimensions explicites et des variantes responsive ; le visuel principal est chargé en priorité. Le menu mobile gère le clavier, Échap et le focus. La galerie respecte le mouvement réduit. Les vidéos externes nécessitent un clic avant connexion à YouTube/Vimeo. Aucun outil de suivi n’est ajouté.
 
 Les métadonnées, URL canoniques, partages sociaux et données structurées produit utilisent les contenus publiés. `SITE_INDEXABLE=false` conserve le site hors indexation, avec `robots.txt` restrictif et sitemap vide. Passer à `true` seulement lorsque les contenus réels et les informations légales sont prêts. Les réglages SEO « Exclure » du CMS restent prioritaires. L’exclusion des moteurs n’est pas un contrôle d’accès ; les pages publiées restent accessibles.
 
@@ -158,6 +172,8 @@ docker compose exec -T db sh -c 'pg_dump -U "$POSTGRES_USER" -d "$POSTGRES_DB" -
 Copier les sauvegardes chiffrées sur un autre support et tester leur restauration dans une base séparée. Une procédure automatique, sa rétention et les sauvegardes médias seront à finaliser avant production.
 
 Pour les mises à jour : sauvegarder, récupérer la version validée de `main`, reconstruire les images et exécuter les migrations avant de redémarrer l’application. Un retour à une ancienne image n’annule pas une migration de base.
+
+La migration `neutral_brand_copy` met à jour les anciennes mentions dans les textes éditoriaux du CMS, les descriptions SEO, les textes alternatifs et les versions enregistrées. Les liens, slugs et noms de fichiers restent stables. Le retour arrière du schéma ne restaure pas les anciens textes : conserver la sauvegarde avant migration.
 
 ## Git
 
